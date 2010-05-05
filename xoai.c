@@ -1,10 +1,8 @@
 #include "xoai.h"
+#include "xoconst.h"
 #include <linux/random.h>
 #include <linux/kernel.h>
 #include <linux/string.h>
-
-
-
 
 
 static char board[3][3];
@@ -14,23 +12,21 @@ static int edges[4] = { 2,4,6,8  };
 static int first_move[5] = {1,3,5,7,9};
 static int opposite_move[10] = { -1,9,-1,7,-1,-1,-1,3,-1,1 };
 
-#define OTHER_PLAYER(player) (player == 'x' ? 'o' : 'x')
-
 int make_move(int player, unsigned square);
-static int _random(int N);
+static int _random(int);
 
 void init_board(void) 
 {
 	_last_move = -1;
 	for (int i = 0; i<9; i++)
 		for (int j = 0; j<3; j++)
-			board[i][j] = ' ';
+			board[i][j] = NO_PLAYER;
 
 }
 
 void print_board(char *str)
 {
-	char t[100];
+	char t[BUF_LEN];
 	char buf[4];
 	memset(t,0,sizeof(t));
 
@@ -163,7 +159,7 @@ int make_move(int player, unsigned square)
 	x = square / 3;
 	y = square % 3;
 
-	if (board[x][y] == ' ')
+	if (board[x][y] == NO_PLAYER)
 		board[x][y] = player;
 	else 
 		return 0;
@@ -189,7 +185,7 @@ static int rand_move(int moves[])
 { 
 	for (int i = 0; i < 99; i++) { 
 		int __move = moves[_random(sizeof(moves))];
-		if (get_square(__move) == ' ') 
+		if (get_square(__move) == NO_PLAYER) 
 			return __move;
 	}
 	return -1;
@@ -214,7 +210,7 @@ static int ai_center_corners_edges(char player)
 static int find_opposite_move(char player)
 {
 	for (int i = 0; i < 4; i++)
-		if (corners[i] == player && opposite_move[corners[i]] == ' ')
+		if (corners[i] == player && opposite_move[corners[i]] == NO_PLAYER)
 			return opposite_move[corners[i]];
 
 	return -1;
@@ -228,7 +224,7 @@ static int ai_block_fork(char player)
 	// edge forks
 	if ((get_square(2) == other_player && get_square(4) == other_player) || 
 		((get_square(8) == other_player && get_square(6) == other_player))) {
-		if (get_square(5) == ' ') {
+		if (get_square(5) == NO_PLAYER) {
 			make_move(player,5);
 			return 0;
 		}
@@ -268,7 +264,7 @@ static int ai_fork(char player)
 
 	// if opponet took corner, take center
 	for (int i = 0; i < 4; i++)
-		if (_last_move == corners[i] && get_square(5) == ' ') {
+		if (_last_move == corners[i] && get_square(5) == NO_PLAYER) {
 			//printf("taking center\n");
 			make_move(player,5);
 			return 0;
@@ -283,7 +279,7 @@ static int ai_fork(char player)
 
 	if (other_player_takes_corner) {
 		int corner;
-		if (get_square(opposite_move[other_player_takes_corner]) == ' ') {
+		if (get_square(opposite_move[other_player_takes_corner]) == NO_PLAYER) {
 			make_move(player,opposite_move[other_player_takes_corner]);
 			return 0;
 		}
@@ -315,15 +311,6 @@ static int _random(int N)
 	return r % (N+1);
 }
 
-static int readuser(void) 
-{
-	/*
-	int s;
-	scanf("%d",&s);
-	return s;
-	*/
-	return 0;
-}
 
 int make_ai_move(char player) 
 { 
@@ -342,52 +329,3 @@ int make_ai_move(char player)
 }
 
 
-#if 0
-int main(void) { 
-	srand(time(NULL));
-	init_board();
-	int _move;
-
-	/*
-	make_move('x', 3);
-	make_ai_move('o');
-	make_move('x', 7);
-	make_ai_move('o');
-
-	print_board();
-	return 0;
-	*/
-
-	print_board();
-	for (int i = 0; i < 5; i++) {
-		if (i < 5) {
-			/*
-			do {
-				printf("enter move: ");
-				_move = readuser();
-			} while(!make_move('x',_move));
-			*/
-			make_ai_move('x');
-			print_board();
-		}
-		if (ai_two_in_a_row('x') == -1) {
-			printf("x wins\n");
-			return 0;
-		}
-
-		int x_wins = make_ai_move('o');
-		print_board();
-
-		if (x_wins) {
-			printf("o wins\n");
-			return 0;
-		}	
-	}
-
-	printf("draw\n");
-
-
-
-	return 0;
-}
-#endif
