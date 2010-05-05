@@ -1,0 +1,38 @@
+INSTALLATION:
+make
+insmod xodev.ko
+dmesg <- look for the line 'mknod /dev/chardev c 251 0'
+and use it to create the device node
+
+i.e:
+
+# mknod baba c 251 0
+
+then to play:
+
+# cat baba 
+
+  |  |  
+--------
+  |  |  
+--------
+x |  |  
+
+# echo 5 > baba
+# cat baba
+
+  |  |  
+--------
+  |o |  
+--------
+x |x |  
+
+# echo reset > baba
+# cat baba
+
+  |  |  
+--------
+  |  |  
+--------
+  |  |x 
+
